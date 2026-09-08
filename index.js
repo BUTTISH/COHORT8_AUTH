@@ -4,9 +4,6 @@ const express = require("express");
 const userRoutes = require("./routes/userRoutes");
 const productRoutes = require("./routes/productsRoutes");
 const mongoose = require("mongoose");
-const dns = require("node:dns");
-
-dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const app = express();
 
