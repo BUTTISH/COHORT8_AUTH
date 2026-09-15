@@ -1,4 +1,6 @@
 const userModel = require("../model/userModel");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 /**
  * CRUD
@@ -12,13 +14,48 @@ const userModel = require("../model/userModel");
 const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    const user = await userModel.create({ name, email, password });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await userModel.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
     res.status(201).json({
       message: "User created successfully",
       data: user,
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+//LOGIN USER
+const loginUser = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "1d",
+      },
+    );
+
+    user.password = undefined;
+
+    return res
+      .status(200)
+      .json({ message: "Login successful", token: token, user: user });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -39,8 +76,8 @@ const getAllUsers = async (req, res) => {
 
 const getSingleUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const getSingle = await userModel.findById(id);
+    const { userId } = req.params;
+    const getSingle = await userModel.findById(userId);
     if (!getSingle) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -59,7 +96,7 @@ const updateUser = async (req, res) => {
     const { id } = req.params;
     const { name, password } = req.body;
     const update = await userModel.findByIdAndUpdate(
-      id,
+      userId,
       { name, password },
       { new: true },
     );
@@ -76,8 +113,8 @@ const updateUser = async (req, res) => {
 //DELETE USER
 const deleteUser = async (req, res) => {
   try {
-    const { id } = req.params;
-    const deleteUser = await userModel.findByIdAndDelete(id);
+    const { userId } = req.params;
+    const deleteUser = await userModel.findByIdAndDelete(userId);
     return res.status(200).json({
       message: "User deleted successfully",
       data: deleteUser,
@@ -89,6 +126,7 @@ const deleteUser = async (req, res) => {
 
 module.exports = {
   createUser,
+  loginUser,
   getAllUsers,
   getSingleUser,
   updateUser,

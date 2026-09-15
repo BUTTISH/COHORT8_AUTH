@@ -7,13 +7,15 @@ const {
   getSingleUser,
   updateUser,
   deleteUser,
+  loginUser,
 } = require("../controller/userController");
 
-userRouter.post("/", createUser);
-userRouter.get("/", getAllUsers);
-userRouter.get("/:id", getSingleUser);
-userRouter.put("/:id", updateUser);
-userRouter.patch("/:id", updateUser);
-userRouter.delete("/:id", deleteUser);
+userRouter.post("/login", loginUser);
+userRouter.post("/user", createUser);
+userRouter.get("/users", getAllUsers);
+userRouter.get("/:userId", getSingleUser);
+userRouter.put("/:userId", updateUser);
+userRouter.patch("/:userId", updateUser);
+userRouter.delete("/:userId", deleteUser);
 
 module.exports = userRouter;
